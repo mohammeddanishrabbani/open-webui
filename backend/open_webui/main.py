@@ -346,6 +346,7 @@ from open_webui.config import (
     ENABLE_EVALUATION_ARENA_MODELS,
     BYPASS_ADMIN_ACCESS_CONTROL,
     USER_PERMISSIONS,
+    DISABLE_CHAT_HISTORY_MODELS,
     DEFAULT_USER_ROLE,
     PENDING_USER_OVERLAY_CONTENT,
     PENDING_USER_OVERLAY_TITLE,
@@ -748,6 +749,7 @@ app.state.config.ENABLE_NOTES = ENABLE_NOTES
 app.state.config.ENABLE_COMMUNITY_SHARING = ENABLE_COMMUNITY_SHARING
 app.state.config.ENABLE_MESSAGE_RATING = ENABLE_MESSAGE_RATING
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
+app.state.config.DISABLE_CHAT_HISTORY_MODELS = DISABLE_CHAT_HISTORY_MODELS
 
 app.state.config.ENABLE_EVALUATION_ARENA_MODELS = ENABLE_EVALUATION_ARENA_MODELS
 app.state.config.EVALUATION_ARENA_MODELS = EVALUATION_ARENA_MODELS
@@ -1796,6 +1798,7 @@ async def get_app_config(request: Request):
                     },
                 },
                 "permissions": {**app.state.config.USER_PERMISSIONS},
+                "disabled_chat_history_models": app.state.config.DISABLE_CHAT_HISTORY_MODELS,
                 "google_drive": {
                     "client_id": GOOGLE_DRIVE_CLIENT_ID.value,
                     "api_key": GOOGLE_DRIVE_API_KEY.value,

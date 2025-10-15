@@ -1463,6 +1463,25 @@ ENABLE_COMMUNITY_SHARING = PersistentConfig(
     os.environ.get("ENABLE_COMMUNITY_SHARING", "True").lower() == "true",
 )
 
+
+DISABLE_CHAT_HISTORY_MODELS = PersistentConfig(
+    "DISABLE_CHAT_HISTORY_MODELS",
+    "chat.disable_history_models",
+    os.environ.get("DISABLE_CHAT_HISTORY_MODELS", "[]"),
+)
+log.info(f"DISABLE_CHAT_HISTORY_MODELS: {DISABLE_CHAT_HISTORY_MODELS.value}")
+try:
+    if isinstance(DISABLE_CHAT_HISTORY_MODELS.value, str):
+        DISABLE_CHAT_HISTORY_MODELS.value = json.loads(DISABLE_CHAT_HISTORY_MODELS.value)
+
+except json.JSONDecodeError:
+    DISABLE_CHAT_HISTORY_MODELS.value = []
+
+
+
+log.info(f"DISABLE_CHAT_HISTORY_MODELS: {DISABLE_CHAT_HISTORY_MODELS.value}")
+
+
 ENABLE_MESSAGE_RATING = PersistentConfig(
     "ENABLE_MESSAGE_RATING",
     "ui.enable_message_rating",

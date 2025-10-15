@@ -39,7 +39,8 @@
 		functions,
 		selectedFolder,
 		pinnedChats,
-		showEmbeds
+		showEmbeds,
+		disabledChatHistoryModels
 	} from '$lib/stores';
 	import {
 		convertMessagesToHistory,
@@ -123,7 +124,69 @@
 	let atSelectedModel: Model | undefined;
 	let selectedModelIds = [];
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
+	// Print to debug
 
+	$: if ($config?.disabled_chat_history_models) {
+    disabledChatHistoryModels.set($config.disabled_chat_history_models);
+}
+	let tempChatAutoEnabled = false; // Track if temp chat was automatically enabled
+
+// Automatically manage temporary chat based on selected models
+$: {
+    if ($disabledChatHistoryModels.length > 0 && selectedModelIds.length > 0) {
+        const hasDisabledModel = selectedModelIds.some(modelId => 
+            $disabledChatHistoryModels.includes(modelId)
+        );
+        toast.info(`Selected models: ${selectedModelIds.join(', ')}`);
+		toast.info(`Models with disabled chat history: ${$disabledChatHistoryModels.join(', ')}`);	
+		toast.info(`Has disabled model: ${hasDisabledModel}`);
+        if (hasDisabledModel) {
+            // Force temporary chat to be enabled when a disabled model is selected
+            if (!$temporaryChatEnabled) {
+                temporaryChatEnabled.set(true);
+                tempChatAutoEnabled = true;
+                
+                // Show notification to user
+                toast.info($i18n.t('Temporary chat enabled - selected model has chat history disabled'));
+            }
+        } else if (!hasDisabledModel && $temporaryChatEnabled && tempChatAutoEnabled) {
+            // Only auto-disable when switching to regular models AND it was auto-enabled
+            temporaryChatEnabled.set(false);
+            tempChatAutoEnabled = false;
+            
+            // Show notification to user
+            toast.info($i18n.t('Temporary chat disabled - switched to regular model'));
+        }
+    }
+}
+
+// Prevent manual disabling of temporary chat when disabled models are selected
+$: {
+    if ($disabledChatHistoryModels.length > 0 && selectedModelIds.length > 0) {
+        const hasDisabledModel = selectedModelIds.some(modelId => 
+            $disabledChatHistoryModels.includes(modelId)
+        );
+        
+        // Force temporary chat back on if user tries to disable it with disabled models
+        if (hasDisabledModel && !$temporaryChatEnabled) {
+            temporaryChatEnabled.set(true);
+            toast.warning($i18n.t('Temporary chat cannot be disabled when using models with chat history restrictions'));
+        }
+    }
+}
+
+// Reset auto-enabled flag only when no disabled models are selected
+$: {
+    if ($disabledChatHistoryModels.length > 0 && selectedModelIds.length > 0) {
+        const hasDisabledModel = selectedModelIds.some(modelId => 
+            $disabledChatHistoryModels.includes(modelId)
+        );
+        
+        if (!hasDisabledModel && !$temporaryChatEnabled) {
+            tempChatAutoEnabled = false;
+        }
+    }
+}
 	let selectedToolIds = [];
 	let selectedFilterIds = [];
 	let imageGenerationEnabled = false;

@@ -925,3 +925,35 @@ async def delete_all_tags_by_id(id: str, user=Depends(get_verified_user)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
         )
+
+
+############################
+# Chat History Configuration
+############################
+
+class DisableHistoryModelsForm(BaseModel):
+    models: list[str]
+
+
+@router.get("/config/disable-history", response_model=dict)
+async def get_disable_history_models_config(request: Request, user=Depends(get_admin_user)):
+    """Get list of models configured to auto-delete chat history"""
+    return {
+        "models": request.app.state.config.DISABLE_CHAT_HISTORY_MODELS
+    }
+
+
+@router.post("/config/disable-history", response_model=dict)
+async def set_disable_history_models_config(
+    request: Request, 
+    form_data: DisableHistoryModelsForm, 
+    user=Depends(get_admin_user)
+):
+    """Configure which models should auto-delete chat history after completion"""
+    request.app.state.config.DISABLE_CHAT_HISTORY_MODELS = form_data.models
+    return {
+        "models": request.app.state.config.DISABLE_CHAT_HISTORY_MODELS
+    }
+
+
+
