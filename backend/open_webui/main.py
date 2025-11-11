@@ -93,6 +93,7 @@ from open_webui.routers import (
     users,
     utils,
     scim,
+    usage_statistics,
 )
 
 from open_webui.routers.retrieval import (
@@ -1310,6 +1311,7 @@ app.include_router(
     evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
 )
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
+app.include_router(usage_statistics.router, prefix="/api/v1/usage", tags=["usage_statistics"])
 
 # SCIM 2.0 API for identity management
 if SCIM_ENABLED:

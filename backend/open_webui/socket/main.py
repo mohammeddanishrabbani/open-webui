@@ -13,6 +13,7 @@ from open_webui.models.users import Users, UserNameResponse
 from open_webui.models.channels import Channels
 from open_webui.models.chats import Chats
 from open_webui.models.notes import Notes, NoteUpdateForm
+from open_webui.models.usage_statistics import UsageStatistics
 from open_webui.utils.redis import (
     get_sentinels_from_env,
     get_sentinel_url_from_env,
@@ -244,16 +245,38 @@ def get_active_status_by_user_id(user_id):
 
 @sio.on("usage")
 async def usage(sid, data):
+    log.info(f"Usage event received - SID: {sid}, Data: {data}")
+    
     if sid in SESSION_POOL:
         model_id = data["model"]
+        chat_id = data.get("chat_id", "")
+        user_id = SESSION_POOL[sid]["id"]
         # Record the timestamp for the last update
         current_time = int(time.time())
 
-        # Store the new usage data and task
+        # Determine if this is a temporary chat
+        is_temporary = chat_id.startswith("local:")
+        
+        log.info(f"Processing usage - User: {user_id}, Model: {model_id}, Chat: {chat_id}, Temporary: {is_temporary}")
+
+        # Store the new usage data and task (existing functionality)
         USAGE_POOL[model_id] = {
             **(USAGE_POOL[model_id] if model_id in USAGE_POOL else {}),
-            sid: {"updated_at": current_time},
+            sid: {
+                "updated_at": current_time,
+                "is_temporary": is_temporary,
+                "user_id": user_id,
+            },
         }
+
+        # Log usage statistics to database for persistence
+        try:
+            success = UsageStatistics.log_usage(user_id, model_id, is_temporary)
+            log.info(f"Usage statistics logged - Success: {success}")
+        except Exception as e:
+            log.error(f"Failed to log usage statistics: {e}")
+    else:
+        log.warning(f"Usage event received but SID {sid} not in SESSION_POOL")
 
 
 @sio.event
